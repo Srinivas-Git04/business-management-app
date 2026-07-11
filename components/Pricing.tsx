@@ -1,0 +1,105 @@
+import { Check } from "lucide-react";
+
+const plans = [
+  {
+    title: "Minimum Booking",
+    price: "₹599",
+    duration: "4 Hours",
+    features: [
+      "Minimum booking is 4 hours",
+      "Verified Professional Driver",
+      "Customer's Own Vehicle",
+      "24×7 Customer Support",
+    ],
+    featured: true,
+  },
+  {
+    title: "Extended Time",
+    price: "₹100",
+    duration: "Per Extra Hour",
+    features: [
+      "After first 4 hours",
+      "Flexible extension",
+      "No hidden charges",
+      "Pay only for extra hours",
+    ],
+  },
+  {
+    title: "12 Hours",
+    price: "₹1,500",
+    duration: "Full Day",
+    features: [
+      "Up to 12 hours",
+      "Experienced Driver",
+      "Waiting Included",
+      "Priority Support",
+    ],
+  },
+  {
+    title: "24 Hours",
+    price: "₹2,500",
+    duration: "One Day",
+    features: [
+      "Up to 24 hours",
+      "Ideal for long trips",
+      "Dedicated Driver",
+      "24×7 Support",
+    ],
+  },
+];
+
+export default function Pricing() {
+  return (
+    <section id="pricing" className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6">
+        <h2 className="text-4xl font-bold text-center mb-4">
+          Pricing Plans
+        </h2>
+
+        <p className="text-center text-gray-600 mb-12">
+          Transparent pricing with a minimum booking of{" "}
+          <span className="font-semibold text-blue-600">4 hours</span>.
+        </p>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {plans.map((plan) => (
+            <div
+              key={plan.title}
+              className={`rounded-2xl p-8 shadow-lg transition hover:-translate-y-2 ${
+                plan.featured
+                  ? "bg-blue-600 text-white"
+                  : "bg-white"
+              }`}
+            >
+              <h3 className="text-2xl font-bold">{plan.title}</h3>
+
+              <div className="mt-5">
+                <span className="text-5xl font-bold">{plan.price}</span>
+                <p className="mt-2">{plan.duration}</p>
+              </div>
+
+              <ul className="mt-8 space-y-4">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2">
+                    <Check size={18} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                className={`mt-8 w-full py-3 rounded-lg font-semibold ${
+                  plan.featured
+                    ? "bg-white text-blue-600"
+                    : "bg-blue-600 text-white"
+                }`}
+              >
+                Hire Driver
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
