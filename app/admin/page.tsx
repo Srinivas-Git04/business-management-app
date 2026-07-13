@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import StatCard from "@/components/admin/StatCard";
 
 interface Booking {
   id: string;
@@ -46,7 +47,7 @@ export default function AdminDashboard() {
   const totalRevenue = bookings.reduce((sum, b) => sum + b.price, 0);
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
+    <div>
 
       <h1 className="text-4xl font-bold mb-8">
         🚗 DSK DriveMate Admin Dashboard
@@ -141,6 +142,6 @@ export default function AdminDashboard() {
 
       </div>
 
-    </main>
+    </div>
   );
 }
