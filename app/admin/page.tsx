@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+
 import StatCard from "@/components/admin/StatCard";
+import SearchBar from "@/components/admin/SearchBar";
+import BookingTable from "@/components/admin/BookingTable";
 
 interface Booking {
   id: string;
@@ -21,6 +24,7 @@ interface Booking {
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchBookings();
@@ -33,9 +37,6 @@ export default function AdminDashboard() {
       .from("bookings")
       .select("*")
       .order("created_at", { ascending: false });
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
 
     if (error) {
       alert(error.message);
@@ -52,6 +53,12 @@ export default function AdminDashboard() {
     0
   );
 
+  const filteredBookings = bookings.filter(
+    (booking) =>
+      booking.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      booking.phone.includes(search)
+  );
+
   return (
     <div>
       <h1 className="text-4xl font-bold mb-8">
@@ -59,7 +66,7 @@ export default function AdminDashboard() {
       </h1>
 
       {/* Statistics */}
-      <div className="grid md:grid-cols-4 gap-6 mb-10">
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Total Bookings"
           value={bookings.length}
@@ -88,71 +95,20 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Bookings Table */}
-      <div className="bg-white rounded-xl shadow overflow-x-auto">
-        <table className="w-full">
+      {/* Search */}
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+      />
 
-          <thead className="bg-blue-600 text-white">
-            <tr>
-              <th className="p-4 text-left">Customer</th>
-              <th className="p-4 text-left">Phone</th>
-              <th className="p-4 text-left">Pickup</th>
-              <th className="p-4 text-left">Destination</th>
-              <th className="p-4 text-left">Plan</th>
-              <th className="p-4 text-left">Vehicle</th>
-              <th className="p-4 text-left">Price</th>
-              <th className="p-4 text-left">Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={8} className="text-center p-6">
-                  Loading...
-                </td>
-              </tr>
-            ) : bookings.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="text-center p-6">
-                  No bookings found.
-                </td>
-              </tr>
-            ) : (
-              bookings.map((booking) => (
-                <tr
-                  key={booking.id}
-                  className="border-b hover:bg-gray-50"
-                >
-                  <td className="p-4">{booking.full_name}</td>
-                  <td className="p-4">{booking.phone}</td>
-                  <td className="p-4">{booking.pickup_location}</td>
-                  <td className="p-4">{booking.destination}</td>
-                  <td className="p-4">{booking.booking_type}</td>
-                  <td className="p-4">{booking.vehicle_type}</td>
-                  <td className="p-4 font-semibold">
-                    ₹{booking.price}
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        booking.status === "Completed"
-                          ? "bg-green-100 text-green-700"
-                          : booking.status === "Assigned"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {booking.status}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-
-        </table>
-      </div>
+      {/* Booking Table */}
+      {loading ? (
+        <div className="bg-white rounded-xl shadow p-8 text-center">
+          Loading bookings...
+        </div>
+      ) : (
+        <BookingTable bookings={filteredBookings} />
+      )}
     </div>
   );
 }
