@@ -7,6 +7,12 @@ import StatCard from "@/components/admin/StatCard";
 import SearchBar from "@/components/admin/SearchBar";
 import BookingTable from "@/components/admin/BookingTable";
 
+interface Driver {
+  id: string;
+  full_name: string;
+  is_available: boolean;
+}
+
 interface Booking {
   id: string;
   full_name: string;
@@ -19,15 +25,19 @@ interface Booking {
   pickup_time: string;
   price: number;
   status: string;
+  driver_id?: string | null;
+  assigned_driver?: string | null;
 }
 
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchBookings();
+    fetchDrivers();
   }, []);
 
   async function fetchBookings() {
@@ -48,6 +58,70 @@ export default function AdminDashboard() {
     setLoading(false);
   }
 
+  async function fetchDrivers() {
+    const { data, error } = await supabase
+      .from("drivers")
+      .select("*")
+      .order("full_name", { ascending: true });
+
+    if (error) {
+      console.error(error.message);
+      return;
+    }
+
+    setDrivers(data || []);
+  }
+
+  async function handleAssign(
+    bookingId: string,
+    driverId: string
+  ) {
+    if (!driverId) {
+      alert("Please select a driver.");
+      return;
+    }
+
+    const driver = drivers.find((d) => d.id === driverId);
+
+    if (!driver) {
+      alert("Driver not found.");
+      return;
+    }
+
+    // Update booking
+    const { error: bookingError } = await supabase
+      .from("bookings")
+      .update({
+        driver_id: driver.id,
+        assigned_driver: driver.full_name,
+        status: "Assigned",
+      })
+      .eq("id", bookingId);
+
+    if (bookingError) {
+      alert(bookingError.message);
+      return;
+    }
+
+    // Update driver
+    const { error: driverError } = await supabase
+      .from("drivers")
+      .update({
+        is_available: false,
+      })
+      .eq("id", driver.id);
+
+    if (driverError) {
+      alert(driverError.message);
+      return;
+    }
+
+    alert("Driver assigned successfully!");
+
+    fetchBookings();
+    fetchDrivers();
+  }
+
   const totalRevenue = bookings.reduce(
     (sum, booking) => sum + booking.price,
     0
@@ -55,7 +129,9 @@ export default function AdminDashboard() {
 
   const filteredBookings = bookings.filter(
     (booking) =>
-      booking.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      booking.full_name
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
       booking.phone.includes(search)
   );
 
@@ -75,23 +151,27 @@ export default function AdminDashboard() {
         <StatCard
           title="Pending"
           value={
-            bookings.filter((b) => b.status === "Pending").length
+            bookings.filter(
+              (b) => b.status === "Pending"
+            ).length
           }
           color="text-yellow-600"
         />
 
         <StatCard
-          title="Completed"
+          title="Assigned"
           value={
-            bookings.filter((b) => b.status === "Completed").length
+            bookings.filter(
+              (b) => b.status === "Assigned"
+            ).length
           }
-          color="text-green-600"
+          color="text-blue-600"
         />
 
         <StatCard
           title="Revenue"
           value={`₹${totalRevenue}`}
-          color="text-blue-600"
+          color="text-green-600"
         />
       </div>
 
@@ -107,7 +187,11 @@ export default function AdminDashboard() {
           Loading bookings...
         </div>
       ) : (
-        <BookingTable bookings={filteredBookings} />
+        <BookingTable
+          bookings={filteredBookings}
+          drivers={drivers}
+          onAssign={handleAssign}
+        />
       )}
     </div>
   );
