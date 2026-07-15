@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import StatCard from "@/components/admin/StatCard";
 import SearchBar from "@/components/admin/SearchBar";
 import BookingTable from "@/components/admin/BookingTable";
+import EditBookingModal from "@/components/admin/EditBookingModal";
 
 interface Driver {
   id: string;
@@ -34,6 +35,12 @@ export default function AdminDashboard() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  const [selectedBooking, setSelectedBooking] =
+  useState<Booking | null>(null);
+
+  const [isEditOpen, setIsEditOpen] =
+    useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -89,14 +96,15 @@ export default function AdminDashboard() {
     }
 
     // Update booking
-    const { error: bookingError } = await supabase
+    const { data: bookingData, error: bookingError } = await supabase
       .from("bookings")
       .update({
         driver_id: driver.id,
         assigned_driver: driver.full_name,
         status: "Assigned",
       })
-      .eq("id", bookingId);
+      .eq("id", bookingId)
+      .select();
 
     if (bookingError) {
       alert(bookingError.message);
@@ -121,6 +129,71 @@ export default function AdminDashboard() {
     fetchBookings();
     fetchDrivers();
   }
+
+async function handleComplete(booking: Booking) {
+  if (!booking.driver_id) {
+    alert("No driver assigned.");
+    return;
+  }
+
+  // 1. Mark booking as completed
+  const { error: bookingError } = await supabase
+    .from("bookings")
+    .update({
+      status: "Completed",
+    })
+    .eq("id", booking.id);
+
+  if (bookingError) {
+    alert(bookingError.message);
+    return;
+  }
+
+  // 2. Make driver available again
+  const { error: driverError } = await supabase
+    .from("drivers")
+    .update({
+      is_available: true,
+    })
+    .eq("id", booking.driver_id);
+
+  if (driverError) {
+    alert(driverError.message);
+    return;
+  }
+
+  // 3. Refresh dashboard
+  await fetchBookings();
+  await fetchDrivers();
+
+  alert("Ride completed successfully!");
+} 
+
+async function handleSaveBooking(updatedBooking: Booking) {
+  const { data, error } = await supabase
+  .from("bookings")
+  .update({
+    full_name: updatedBooking.full_name,
+    phone: updatedBooking.phone,
+    pickup_location: updatedBooking.pickup_location,
+    destination: updatedBooking.destination,
+    booking_type: updatedBooking.booking_type,
+    vehicle_type: updatedBooking.vehicle_type,
+    price: updatedBooking.price,
+  })
+  .eq("id", updatedBooking.id)
+  .select();
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Booking updated successfully!");
+
+  setIsEditOpen(false);
+  fetchBookings();
+}
 
   const totalRevenue = bookings.reduce(
     (sum, booking) => sum + booking.price,
@@ -187,11 +260,29 @@ export default function AdminDashboard() {
           Loading bookings...
         </div>
       ) : (
-        <BookingTable
-          bookings={filteredBookings}
-          drivers={drivers}
-          onAssign={handleAssign}
-        />
+        <>
+          <BookingTable
+            bookings={filteredBookings}
+            drivers={drivers}
+            onAssign={handleAssign}
+            onComplete={handleComplete}
+            onEdit={(booking) => {
+              console.log("Booking:", booking);
+
+              setSelectedBooking(booking as any);
+
+              setIsEditOpen(true);
+
+              console.log("Opening modal...");
+            }}
+          />
+          <EditBookingModal
+            booking={selectedBooking as any}
+            open={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            onSave={handleSaveBooking as any}
+          />
+        </>
       )}
     </div>
   );

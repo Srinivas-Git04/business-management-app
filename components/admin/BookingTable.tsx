@@ -26,12 +26,16 @@ interface BookingTableProps {
   bookings: Booking[];
   drivers: Driver[];
   onAssign: (bookingId: string, driverId: string) => void;
+  onComplete: (booking: Booking) => void;
+  onEdit: (booking: Booking) => void;
 }
 
 export default function BookingTable({
   bookings,
   drivers,
   onAssign,
+  onComplete,
+  onEdit,
 }: BookingTableProps) {
   const [selectedDrivers, setSelectedDrivers] = useState<
     Record<string, string>
@@ -52,13 +56,14 @@ export default function BookingTable({
             <th className="p-4 text-left">Price</th>
             <th className="p-4 text-left">Status</th>
             <th className="p-4 text-left">Action</th>
+            <th className="p-4 text-left">Edit</th>
           </tr>
         </thead>
 
         <tbody>
           {bookings.length === 0 ? (
             <tr>
-              <td colSpan={10} className="text-center p-6">
+              <td colSpan={11} className="text-center p-6">
                 No bookings found.
               </td>
             </tr>
@@ -122,12 +127,19 @@ export default function BookingTable({
                 </td>
 
                 <td className="p-4">
-                  {booking.assigned_driver ? (
+                  {booking.status === "Completed" ? (
                     <button
                       disabled
-                      className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed"
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg"
                     >
-                      Assigned
+                      Completed
+                    </button>
+                  ) : booking.assigned_driver ? (
+                    <button
+                      onClick={() => onComplete(booking)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                    >
+                      Complete Ride
                     </button>
                   ) : (
                     <button
@@ -143,6 +155,18 @@ export default function BookingTable({
                       Assign
                     </button>
                   )}
+                </td>
+                <td className="p-4">
+                  <button
+                    onClick={() => {
+                      alert("Edit clicked");
+                      console.log("Calling parent onEdit...");
+                      onEdit(booking);
+                    }}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg"
+                  >
+                    Edit
+                  </button>
                 </td>
               </tr>
             ))
