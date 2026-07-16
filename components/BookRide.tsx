@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 export default function BookRide() {
   const [form, setForm] = useState({
     full_name: "",
+    email: "",
     phone: "",
     pickup_location: "",
     destination: "",
@@ -45,6 +46,7 @@ export default function BookRide() {
     const { error } = await supabase.from("bookings").insert([
       {
         full_name: form.full_name,
+        email: form.email,
         phone: form.phone,
         pickup_location: form.pickup_location,
         destination: form.destination,
@@ -54,6 +56,7 @@ export default function BookRide() {
         pickup_time: form.pickup_time,
         notes: form.notes,
         price: prices[form.booking_type],
+        status: "Pending",
       },
     ]);
 
@@ -68,6 +71,7 @@ export default function BookRide() {
 
     setForm({
       full_name: "",
+      email: "",
       phone: "",
       pickup_location: "",
       destination: "",
@@ -101,6 +105,16 @@ export default function BookRide() {
             name="full_name"
             placeholder="Full Name"
             value={form.full_name}
+            onChange={handleChange}
+            required
+            className="border rounded-lg p-3"
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            value={form.email}
             onChange={handleChange}
             required
             className="border rounded-lg p-3"
