@@ -9,8 +9,8 @@ export default function BookRide() {
     phone: "",
     pickup_location: "",
     destination: "",
-    vehicle_type: "Sedan",
-    booking_type: "4 Hours",
+    vehicle_type: "",
+    booking_type: "",
     booking_date: "",
     pickup_time: "",
     notes: "",
@@ -140,25 +140,29 @@ export default function BookRide() {
             name="vehicle_type"
             value={form.vehicle_type}
             onChange={handleChange}
+            required
             className="border rounded-lg p-3"
           >
-            <option>Sedan</option>
-            <option>SUV</option>
-            <option>Hatchback</option>
-            <option>Luxury</option>
+            <option value="">Select Vehicle Type</option>
+            <option value="Sedan">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="Hatchback">Hatchback</option>
+            <option value="Luxury">Luxury</option>
           </select>
 
           <select
             name="booking_type"
             value={form.booking_type}
             onChange={handleChange}
+            required
             className="border rounded-lg p-3"
           >
-            <option>4 Hours</option>
-            <option>Extra Hours</option>
-            <option>12 Hours</option>
-            <option>24 Hours</option>
-            <option>Outstation</option>
+            <option value="">Select Duration</option>
+            <option value="4 Hours">4 Hours</option>
+            <option value="Extra Hours">Extra Hours</option>
+            <option value="12 Hours">12 Hours</option>
+            <option value="24 Hours">24 Hours</option>
+            <option value="Outstation">Outstation</option>
           </select>
 
           <input

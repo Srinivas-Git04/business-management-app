@@ -195,10 +195,80 @@ async function handleSaveBooking(updatedBooking: Booking) {
   fetchBookings();
 }
 
+async function handleDelete(bookingId: string) {
+  const confirmed = confirm(
+    "Are you sure you want to delete this booking?"
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("id", bookingId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Booking deleted successfully!");
+
+  fetchBookings();
+}
+
   const totalRevenue = bookings.reduce(
     (sum, booking) => sum + booking.price,
     0
   );
+  const today = new Date().toISOString().split("T")[0];
+
+  const todayRevenue = bookings
+    .filter((b) => b.booking_date === today)
+    .reduce((sum, b) => sum + b.price, 0);
+
+  const todayBookings = bookings.filter(
+  (b) => b.booking_date === today
+).length;
+
+const currentMonth = new Date().getMonth();
+const currentYear = new Date().getFullYear();
+
+const monthRevenue = bookings
+  .filter((b) => {
+    const d = new Date(b.booking_date);
+    return (
+      d.getMonth() === currentMonth &&
+      d.getFullYear() === currentYear
+    );
+  })
+  .reduce((sum, b) => sum + b.price, 0);
+
+  const cancelledBookings = bookings.filter(
+  (b) => b.status === "Cancelled"
+).length;
+
+  const completedRides = bookings.filter(
+    (b) => b.status === "Completed"
+  ).length;
+
+  const pendingBookings = bookings.filter(
+    (b) => b.status === "Pending"
+  ).length;
+
+  const assignedBookings = bookings.filter(
+    (b) => b.status === "Assigned"
+  ).length;
+
+  const availableDrivers = drivers.filter(
+    (d) => d.is_available
+  ).length;
+
+  const busyDrivers = drivers.filter(
+    (d) => !d.is_available
+  ).length;
+
+  const totalDrivers = drivers.length;
 
   const filteredBookings = bookings.filter(
     (booking) =>
@@ -215,39 +285,65 @@ async function handleSaveBooking(updatedBooking: Booking) {
       </h1>
 
       {/* Statistics */}
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Total Bookings"
           value={bookings.length}
         />
 
         <StatCard
-          title="Pending"
-          value={
-            bookings.filter(
-              (b) => b.status === "Pending"
-            ).length
-          }
+          title="Pending Bookings"
+          value={pendingBookings}
           color="text-yellow-600"
         />
 
         <StatCard
-          title="Assigned"
-          value={
-            bookings.filter(
-              (b) => b.status === "Assigned"
-            ).length
-          }
+          title="Assigned Rides"
+          value={assignedBookings}
           color="text-blue-600"
+        />
+
+        <StatCard
+          title="Completed Rides"
+          value={completedRides}
+          color="text-green-600"
+        />
+
+        <StatCard
+          title="Total Drivers"
+          value={totalDrivers}
+          color="text-purple-600"
+        />
+
+        <StatCard
+          title="Available Drivers"
+          value={availableDrivers}
+          color="text-green-600"
+        />
+
+        <StatCard
+          title="Busy Drivers"
+          value={busyDrivers}
+          color="text-red-600"
         />
 
         <StatCard
           title="Revenue"
           value={`₹${totalRevenue}`}
-          color="text-green-600"
+          color="text-emerald-600"
         />
-      </div>
 
+        <StatCard
+          title="Today's Revenue"
+          value={`₹${todayRevenue}`}
+          color="text-blue-700"
+        />
+        <StatCard
+          title="This Month's Revenue"
+          value={`₹${monthRevenue}`}
+          color="text-indigo-700"
+        />
+</div>
       {/* Search */}
       <SearchBar
         value={search}
@@ -266,6 +362,7 @@ async function handleSaveBooking(updatedBooking: Booking) {
             drivers={drivers}
             onAssign={handleAssign}
             onComplete={handleComplete}
+            onDelete={handleDelete}
             onEdit={(booking) => {
               console.log("Booking:", booking);
 

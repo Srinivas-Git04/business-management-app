@@ -28,6 +28,7 @@ interface BookingTableProps {
   onAssign: (bookingId: string, driverId: string) => void;
   onComplete: (booking: Booking) => void;
   onEdit: (booking: Booking) => void;
+  onDelete: (bookingId: string) => void;
 }
 
 export default function BookingTable({
@@ -36,6 +37,7 @@ export default function BookingTable({
   onAssign,
   onComplete,
   onEdit,
+  onDelete,
 }: BookingTableProps) {
   const [selectedDrivers, setSelectedDrivers] = useState<
     Record<string, string>
@@ -57,6 +59,7 @@ export default function BookingTable({
             <th className="p-4 text-left">Status</th>
             <th className="p-4 text-left">Action</th>
             <th className="p-4 text-left">Edit</th>
+            <th className="p-4 text-left">Delete</th>
           </tr>
         </thead>
 
@@ -159,13 +162,21 @@ export default function BookingTable({
                 <td className="p-4">
                   <button
                     onClick={() => {
-                      alert("Edit clicked");
-                      console.log("Calling parent onEdit...");
                       onEdit(booking);
                     }}
                     className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg"
                   >
                     Edit
+                  </button>
+                </td>
+                <td className="p-4">
+                  <button
+                    onClick={() => {
+                      onDelete(booking.id);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>
