@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 import StatCard from "@/components/admin/StatCard";
@@ -31,6 +32,7 @@ interface Booking {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,9 +45,39 @@ export default function AdminDashboard() {
     useState(false);
 
   useEffect(() => {
-    fetchBookings();
-    fetchDrivers();
-  }, []);
+  checkAdmin();
+}, []);
+
+async function checkAdmin() {
+  setLoading(true);
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user.email) {
+    router.replace("/admin/login");
+    return;
+  }
+
+  const { data: admin, error } = await supabase
+    .from("admins")
+    .select("id")
+    .eq("email", session.user.email)
+    .maybeSingle();
+
+  if (error || !admin) {
+    await supabase.auth.signOut();
+    alert("Access denied.");
+    router.replace("/admin/login");
+    return;
+  }
+
+  await fetchBookings();
+  await fetchDrivers();
+
+  setLoading(false);
+}
 
   async function fetchBookings() {
     setLoading(true);
@@ -278,14 +310,27 @@ const monthRevenue = bookings
       booking.phone.includes(search)
   );
 
-  return (
-    <div>
-      <h1 className="text-4xl font-bold mb-8">
+return (
+  <div>
+
+    <div className="flex justify-between items-center mb-8">
+      <h1 className="text-4xl font-bold">
         🚗 DSK DriveMate Admin Dashboard
       </h1>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <button
+        onClick={async () => {
+          await supabase.auth.signOut();
+          router.replace("/admin/login");
+        }}
+        className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg"
+      >
+        Logout
+      </button>
+    </div>
+
+    {/* Statistics */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Total Bookings"
           value={bookings.length}

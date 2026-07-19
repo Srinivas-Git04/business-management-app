@@ -39,12 +39,42 @@ export default function BookRide() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    setLoading(true);
+  setLoading(true);
 
-    const { error } = await supabase.from("bookings").insert([
-      {
+  try {
+    // Check if customer already exists
+    let { data: customer, error: fetchError } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("email", form.email)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    // Create customer if not found
+    if (!customer) {
+      const { data: newCustomer, error: createError } = await supabase
+        .from("customers")
+        .insert({
+          full_name: form.full_name,
+          email: form.email,
+          phone: form.phone,
+        })
+        .select("id")
+        .single();
+
+      if (createError) throw createError;
+
+      customer = newCustomer;
+    }
+
+    // Create booking
+    const { error: bookingError } = await supabase
+      .from("bookings")
+      .insert({
+        customer_id: customer.id,
         full_name: form.full_name,
         email: form.email,
         phone: form.phone,
@@ -55,17 +85,14 @@ export default function BookRide() {
         booking_date: form.booking_date,
         pickup_time: form.pickup_time,
         notes: form.notes,
-        price: prices[form.booking_type],
+        price:
+          form.booking_type === "Outstation"
+            ? 0
+            : prices[form.booking_type],
         status: "Pending",
-      },
-    ]);
+      });
 
-    setLoading(false);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
+    if (bookingError) throw bookingError;
 
     alert("Driver booking submitted successfully!");
 
@@ -75,14 +102,18 @@ export default function BookRide() {
       phone: "",
       pickup_location: "",
       destination: "",
-      vehicle_type: "Sedan",
-      booking_type: "4 Hours",
+      vehicle_type: "",
+      booking_type: "",
       booking_date: "",
       pickup_time: "",
       notes: "",
     });
-  };
-
+  } catch (error: any) {
+    alert(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <section id="book" className="py-20 bg-gray-50">
       <div className="max-w-5xl mx-auto px-6">

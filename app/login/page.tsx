@@ -2,78 +2,64 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
+  e.preventDefault();
 
-    setLoading(true);
+  setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: "http://localhost:3000/customer",
-      },
-    });
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${window.location.origin}/customer`,
+    },
+  });
 
-    setLoading(false);
+  setLoading(false);
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    alert(
-      "Login link sent! Please check your email."
-    );
+  if (error) {
+    alert(error.message);
+    return;
   }
 
+  alert(
+    "We've sent a login link to your email. Open it and you'll be signed in automatically."
+  );
+}
+
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gray-100">
-
-      <div className="bg-white shadow-xl rounded-2xl p-10 w-full max-w-md">
-
-        <h1 className="text-3xl font-bold text-center mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md"
+      >
+        <h1 className="text-3xl font-bold mb-6 text-center">
           Customer Login
         </h1>
 
-        <p className="text-gray-500 text-center mb-8">
-          Login to view your bookings.
-        </p>
+        <input
+          type="email"
+          placeholder="Email Address"
+          className="w-full border rounded-lg p-3 mb-4"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-        <form
-          onSubmit={handleLogin}
-          className="space-y-5"
+        <button
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
         >
-
-          <input
-            type="email"
-            placeholder="Email Address"
-            required
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
-            className="w-full border rounded-lg p-3"
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
-          >
-            {loading
-              ? "Sending..."
-              : "Send Login Link"}
-          </button>
-
-        </form>
-
-      </div>
-
-    </section>
+          {loading ? "Sending..." : "Send Login Link"}
+        </button>
+      </form>
+    </div>
   );
 }

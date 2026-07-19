@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface Booking {
   id: string;
-  full_name: string;
-  email: string;
-  phone: string;
   pickup_location: string;
   destination: string;
-  booking_type: string;
-  vehicle_type: string;
   booking_date: string;
   pickup_time: string;
+  booking_type: string;
+  vehicle_type: string;
   price: number;
   status: string;
   assigned_driver: string | null;
@@ -23,49 +20,56 @@ interface Booking {
 export default function CustomerDashboard() {
   const router = useRouter();
 
-  const [userEmail, setUserEmail] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState("");
+  const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
-    checkUser();
+    loadBookings();
   }, []);
 
-  async function checkUser() {
+  async function loadBookings() {
+    // Check login
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    if (!user) {
+    if (!session?.user.email) {
       router.push("/login");
       return;
     }
 
-    setUserEmail(user.email || "");
+    const email = session.user.email;
 
-    fetchBookings(user.email!);
-  }
+    setUserEmail(email);
 
-  async function fetchBookings(email: string) {
+    // Find customer
+    const { data: customer, error: customerError } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (customerError) {
+      setLoading(false);
+      alert(customerError.message);
+      return;
+    }
+
+    // Get only this customer's bookings
     const { data, error } = await supabase
       .from("bookings")
       .select("*")
-      .eq("email", email)
+      .eq("customer_id", customer.id)
       .order("booking_date", { ascending: false });
 
     if (error) {
-      alert(error.message);
       setLoading(false);
+      alert(error.message);
       return;
     }
 
     setBookings(data || []);
-
-    if (data && data.length > 0) {
-      setCustomerName(data[0].full_name);
-    }
-
     setLoading(false);
   }
 
@@ -74,91 +78,116 @@ export default function CustomerDashboard() {
     router.push("/login");
   }
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="max-w-6xl mx-auto p-8">
 
-      <div className="max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-4xl font-bold">
+            Customer Dashboard
+          </h1>
 
-        <div className="flex justify-between items-center mb-8">
-
-          <div>
-            <h1 className="text-4xl font-bold">
-              Welcome, {customerName || "Customer"} 👋
-            </h1>
-
-            <p className="text-gray-500">
-              {userEmail}
-            </p>
-          </div>
-
-          <button
-            onClick={logout}
-            className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-lg"
-          >
-            Logout
-          </button>
-
+          <p className="text-gray-500 mt-2">
+            {userEmail}
+          </p>
         </div>
 
-        {loading ? (
-          <div className="text-center py-10">
-            Loading...
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="bg-white rounded-xl shadow p-8 text-center">
-            No bookings found.
-          </div>
-        ) : (
-          <div className="grid gap-6">
+        <button
+          onClick={logout}
+          className="bg-red-500 text-white px-5 py-2 rounded-lg"
+        >
+          Logout
+        </button>
+      </div>
 
-            {bookings.map((booking) => (
-              <div
-                key={booking.id}
-                className="bg-white rounded-xl shadow-lg p-6"
-              >
+      {bookings.length === 0 ? (
+        <div className="bg-white rounded-xl shadow p-8 text-center">
+          No bookings found.
+        </div>
+      ) : (
+        <div className="grid gap-6">
 
-                <div className="flex justify-between mb-4">
+          {bookings.map((booking) => (
+            <div
+              key={booking.id}
+              className="bg-white rounded-xl shadow-lg p-6"
+            >
 
-                  <h2 className="text-xl font-bold">
-                    Booking #{booking.id.slice(0,8)}
+              <div className="flex justify-between">
+
+                <div>
+
+                  <h2 className="text-2xl font-bold">
+                    {booking.status}
                   </h2>
 
-                  <span className="font-semibold text-blue-600">
-                    {booking.status}
-                  </span>
+                  <p className="text-gray-500 mt-2">
+                    {booking.pickup_location}
+                  </p>
+
+                  <p className="text-gray-500">
+                    ↓
+                  </p>
+
+                  <p className="text-gray-500">
+                    {booking.destination}
+                  </p>
 
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-3">
+                <div className="text-right">
 
-                  <p><strong>Pickup:</strong> {booking.pickup_location}</p>
-
-                  <p><strong>Destination:</strong> {booking.destination}</p>
-
-                  <p><strong>Vehicle:</strong> {booking.vehicle_type}</p>
-
-                  <p><strong>Duration:</strong> {booking.booking_type}</p>
-
-                  <p><strong>Date:</strong> {booking.booking_date}</p>
-
-                  <p><strong>Time:</strong> {booking.pickup_time}</p>
-
-                  <p><strong>Price:</strong> ₹{booking.price}</p>
+                  <p className="font-semibold">
+                    {booking.booking_date}
+                  </p>
 
                   <p>
-                    <strong>Driver:</strong>{" "}
-                    {booking.assigned_driver || "Not Assigned"}
+                    {booking.pickup_time}
+                  </p>
+
+                  <p className="mt-2">
+                    {booking.vehicle_type}
+                  </p>
+
+                  <p>
+                    {booking.booking_type}
+                  </p>
+
+                  <p className="text-green-600 font-bold mt-3">
+                    ₹{booking.price}
                   </p>
 
                 </div>
 
               </div>
-            ))}
 
-          </div>
-        )}
+              {booking.assigned_driver && (
+                <div className="mt-5 border-t pt-4">
 
-      </div>
+                  <p className="font-semibold">
+                    Driver Assigned
+                  </p>
+
+                  <p>
+                    {booking.assigned_driver}
+                  </p>
+
+                </div>
+              )}
+
+            </div>
+          ))}
+
+        </div>
+      )}
 
     </div>
   );
