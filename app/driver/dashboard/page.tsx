@@ -28,7 +28,6 @@ interface Booking {
 
 export default function DriverDashboard() {
   const router = useRouter();
-  const [available, setAvailable] = useState(true);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [todaysTrips, setTodaysTrips] = useState(0);

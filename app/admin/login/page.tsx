@@ -76,12 +76,28 @@ export default function AdminLoginPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || cooldown}
+          <div className="flex justify-center pt-2">
+            
+            <button
+              type="submit"
+              disabled={loading || cooldown}
+              className={`
+                px-8 py-3 rounded-lg font-semibold text-white
+                transition-all duration-300
+                ${
+                  loading || cooldown
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-lg"
+                }
+              `}
             >
-            {cooldown ? "Please wait..." : "Login"}
+              {loading
+                ? "Sending..."
+                : cooldown
+                ? "Please wait..."
+                : "Login"}
             </button>
+          </div>
 
         </form>
 

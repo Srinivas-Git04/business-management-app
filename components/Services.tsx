@@ -1,16 +1,16 @@
 export default function Services() {
   const services = [
     {
-      title: "Customer Management",
-      description: "Manage customer information, history and communication.",
+      title: "Driver Management",
+      description: "Book experienced drivers for your business and personal needs.",
     },
     {
-      title: "Employee Management",
-      description: "Track employees, attendance and work assignments.",
+      title: "Car Service with Driver",
+      description: "Hire a driver and a car for safe and convenient travel.",
     },
     {
-      title: "Booking System",
-      description: "Handle bookings and schedules with ease.",
+      title: "Self-Drive Car Rental",
+      description: "Rent cars for your trips without a driver.",
     },
   ];
 

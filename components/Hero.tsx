@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, ShieldCheck, Clock3, Star } from "lucide-react";
+import Image from "next/image";
 
 export default function Hero() {
   return (
@@ -62,7 +63,7 @@ export default function Hero() {
           </div>
 
         </div>
-
+{/* 
         <div className="flex items-center justify-center">
           <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
             <h2 className="text-2xl font-bold mb-6">
@@ -89,7 +90,17 @@ export default function Hero() {
             </button>
           </div>
         </div>
-
+ */}
+ <div className="animate-hero">
+  <Image
+    src="/images/hero.png"
+    alt="Professional Driver"
+    width={650}
+    height={550}
+    priority
+    className="object-contain"
+  />
+</div>
       </div>
     </section>
   );
