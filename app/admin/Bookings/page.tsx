@@ -34,6 +34,7 @@ export default function BookingsPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [assignModal, setAssignModal] = useState(false);
 
   const [selectedBooking, setSelectedBooking] =
     useState<Booking | null>(null);
@@ -206,6 +207,24 @@ async function handleSaveBooking(updatedBooking: Booking) {
   fetchBookings();
 
   alert("Booking updated successfully!");
+}
+
+async function assignDriver(booking: any) {
+  setSelectedBooking(booking);
+
+  const { data, error } = await supabase
+    .from("drivers")
+    .select("*")
+    .eq("is_available", true)
+    .order("full_name");
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setDrivers(data || []);
+  setAssignModal(true);
 }
 
 const filteredBookings = bookings.filter(

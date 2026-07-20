@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import CustomerHistoryModal from "@/components/admin/CustomerHistoryModal";
+import StatCard from "@/components/admin/StatCard";
 
 interface Customer {
   full_name: string;
@@ -11,10 +13,24 @@ interface Customer {
   spent: number;
 }
 
+interface BookingHistory {
+  id: string;
+  booking_date: string;
+  pickup_location: string;
+  destination: string;
+  price: number;
+  status: string;
+}
+
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedCustomer, setSelectedCustomer] =
+          useState<Customer | null>(null);
+  const [history, setHistory] = 
+          useState< BookingHistory[]>([]);
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -58,6 +74,21 @@ export default function CustomersPage() {
     setLoading(false);
   }
 
+  async function fetchCustomerHistory(phone: string) {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("*")
+    .eq("phone", phone)
+    .order("booking_date", { ascending: false });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setHistory(data || []);
+}
+
   const filteredCustomers = customers.filter(
   (customer) =>
     customer.full_name
@@ -92,33 +123,30 @@ const averageSpent =
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <p className="text-gray-500">Customers</p>
-          <h2 className="text-3xl font-bold">
-            {totalCustomers}
-          </h2>
-        </div>
+        
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <p className="text-gray-500">Bookings</p>
-          <h2 className="text-3xl font-bold">
-            {totalBookings}
-          </h2>
-        </div>
+          <StatCard
+            title="Total Customers"
+            value={totalCustomers}
+          />
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <p className="text-gray-500">Revenue</p>
-          <h2 className="text-3xl font-bold text-green-600">
-            ₹{totalRevenue}
-          </h2>
-        </div>
+          <StatCard
+            title="Total Bookings"
+            value={totalBookings}
+            color="text-blue-600"
+          />
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <p className="text-gray-500">Average Spent</p>
-          <h2 className="text-3xl font-bold text-blue-600">
-            ₹{averageSpent}
-          </h2>
-        </div>
+          <StatCard
+            title="Revenue"
+            value={`₹${totalRevenue}`}
+            color="text-green-600"
+          />
+
+          <StatCard
+            title="Average Spent"
+            value={`₹${averageSpent}`}
+            color="text-purple-600"
+          />
 
       </div>
 
@@ -155,6 +183,10 @@ const averageSpent =
                   Total Spent
                 </th>
 
+                <th className="p-4 text-center">
+                  Actions
+                </th>
+
               </tr>
 
             </thead>
@@ -188,6 +220,19 @@ const averageSpent =
                     ₹{customer.spent}
                   </td>
 
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={async () => {
+                        setSelectedCustomer(customer);
+                        await fetchCustomerHistory(customer.phone);
+                        setOpenModal(true);
+                      }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                    >
+                      View Bookings
+                    </button>
+                  </td>
+
                 </tr>
 
               ))}
@@ -198,6 +243,13 @@ const averageSpent =
 
         </div>
       )}
+
+      <CustomerHistoryModal
+        open={openModal}
+        customer={selectedCustomer}
+        bookings={history}
+        onClose={() => setOpenModal(false)}
+      />
 
     </div>
   );

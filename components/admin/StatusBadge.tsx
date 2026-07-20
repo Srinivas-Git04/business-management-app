@@ -23,10 +23,20 @@ export default function StatusBadge({
     case "Cancelled":
       styles = "bg-red-100 text-red-700";
       break;
+
+    case "Available":
+      styles = "bg-green-100 text-green-700";
+      break;
+
+    case "Busy":
+      styles = "bg-red-100 text-red-700";
+      break;
   }
 
   return (
-    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${styles}`}>
+    <span
+      className={`px-3 py-1 rounded-full text-sm font-semibold ${styles}`}
+    >
       {status}
     </span>
   );
