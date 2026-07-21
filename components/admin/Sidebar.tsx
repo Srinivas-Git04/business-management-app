@@ -9,6 +9,7 @@ import {
   Users,
   CreditCard,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 
 const menu = [
@@ -32,6 +33,13 @@ const menu = [
     href: "/admin/customers",
     icon: Users,
   },
+
+  {
+    title: "Contact",
+    href: "/admin/contact",
+    icon: MessageSquare,
+  },
+
   {
     title: "Payments",
     href: "/admin/payments",

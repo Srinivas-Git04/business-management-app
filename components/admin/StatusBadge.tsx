@@ -31,6 +31,10 @@ export default function StatusBadge({
     case "Busy":
       styles = "bg-red-100 text-red-700";
       break;
+
+    case "Paid":
+      styles = "bg-green-100 text-green-700";
+      break;
   }
 
   return (
