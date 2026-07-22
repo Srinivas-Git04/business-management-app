@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function BookRide() {
@@ -19,13 +19,33 @@ export default function BookRide() {
 
   const [loading, setLoading] = useState(false);
 
+  const [settings, setSettings] = useState<any>(null);
+
+useEffect(() => {
+  loadSettings();
+}, []);
+
+async function loadSettings() {
+  const { data } = await supabase
+    .from("settings")
+    .select("*")
+    .single();
+
+  setSettings(data);
+}
+
   const prices: Record<string, number> = {
-    "4 Hours": 599,
-    "Extra Hours": 100,
-    "12 Hours": 1500,
-    "24 Hours": 2500,
+    "4 Hours": settings?.price_4_hours ?? 0,
+    "Extra Hours": settings?.extra_hour_price ?? 0,
+    "12 Hours": settings?.price_12_hours ?? 0,
+    "24 Hours": settings?.price_24_hours ?? 0,
     "Outstation": 0,
   };
+
+
+
+
+
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -245,7 +265,7 @@ export default function BookRide() {
             <p className="text-3xl font-bold text-blue-700">
               {form.booking_type === "Outstation"
                 ? "Custom Quote"
-                : `₹${prices[form.booking_type]}`}
+                : `₹${prices[form.booking_type] ?? 0}`}
             </p>
 
             <p className="text-gray-600 mt-2">

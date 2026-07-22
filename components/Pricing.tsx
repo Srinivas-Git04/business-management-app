@@ -1,9 +1,31 @@
-import { Check } from "lucide-react";
+"use client";
 
-const plans = [
+import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
+
+
+export default function Pricing() {
+  const [settings, setSettings] = useState<any>(null);
+
+    useEffect(() => {
+      loadSettings();
+    }, []);
+
+    async function loadSettings() {
+      const { data } = await supabase
+        .from("settings")
+        .select("*")
+        .single();
+
+      setSettings(data);
+    }
+
+  const plans = [
   {
     title: "Minimum Booking",
-    price: "₹599",
+    price: `₹${settings?.price_4_hours ?? 599}`,
     duration: "4 Hours",
     features: [
       "Minimum booking is 4 hours",
@@ -15,7 +37,7 @@ const plans = [
   },
   {
     title: "Extended Time",
-    price: "₹100",
+    price: `₹${settings?.extra_hour_price ?? 100}`,
     duration: "Per Extra Hour",
     features: [
       "After first 4 hours",
@@ -26,7 +48,7 @@ const plans = [
   },
   {
     title: "12 Hours",
-    price: "₹1,500",
+    price: `₹${settings?.price_12_hours ?? 1500}`,
     duration: "Full Day",
     features: [
       "Up to 12 hours",
@@ -37,7 +59,7 @@ const plans = [
   },
   {
     title: "24 Hours",
-    price: "₹2,500",
+    price: `₹${settings?.price_24_hours ?? 2500}`,
     duration: "One Day",
     features: [
       "Up to 24 hours",
@@ -48,7 +70,6 @@ const plans = [
   },
 ];
 
-export default function Pricing() {
   return (
     <section id="pricing" className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6">
